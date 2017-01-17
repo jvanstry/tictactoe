@@ -11,6 +11,7 @@ div{
 
 svg {
     position: absolute;
+    pointer-events: none;
 }
 
 line {
@@ -57,4 +58,25 @@ td:nth-child(2) {
 
 #x-id{
     margin-top: 60px;
+}
+
+.open:hover{
+    cursor: pointer;
+}
+
+.taken:hover{
+    cursor: not-allowed;
+}
+
+.x, .o{
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.o{
+    background-image: url("images/o.png");
+}
+
+.x{
+    background-image: url("images/x.png")
 }
