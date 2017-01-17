@@ -1,0 +1,32 @@
+td{
+    width:150px;
+    height:150px;
+
+}
+
+div{
+    display: inline-block;
+    float: left;
+}
+
+td:nth-child(2) {
+    border-left:2px solid black;
+    border-right:2px solid black;
+}
+
+#row2 td{
+    border-top:2px solid black;
+    border-bottom:2px solid black;
+}
+
+#board{
+    margin: 30px 50px 0 30px;
+}
+
+#information{
+    margin-top: 40px;
+}
+
+#x-id{
+    margin-top: 60px;
+}
