@@ -2,7 +2,7 @@
   "name": "tictactoe",
   "version": "1.0.0",
   "description": "An unbeatable Tic Tac Toe engine plus view for gameplay",
-  "main": "main.js",
+  "main": "server.js",
   "repository": {
     "type": "git",
     "url": "https://www.github.com/jvanstry/tictactoe"
