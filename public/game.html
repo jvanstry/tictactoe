@@ -2,40 +2,41 @@
 <html>
 <head>
     <link rel="stylesheet" href="styles.css">
-    <script src="scripts/gameplay.js"></script>
+    <script src="bundle.js"></script>
 </head>
 <body>
     <div id="board">
         <svg width="450" height="450" viewBox="0 0 450 450" xmlns="http://www.w3.org/2000/svg">
-            <line x1="0" y1="0" x2="450" y2="450" stroke-width="2" stroke="red"  />
+            <line stroke="red"  />
+            <path d="M357,359 C35,308 56,91 295,60" stroke="red" stroke-width="4" fill="transparent"/>
         </svg>
         <table>
           <tr id="row0">
-            <td class="open"></td>
-            <td class="open"></td>
-            <td class="open"></td>
+            <td data-row=0 data-column=0 class="open"></td>
+            <td data-row=0 data-column=1 class="open"></td>
+            <td data-row=0 data-column=2 class="open"></td>
           </tr>
           <tr id="row1">
-            <td class="open"></td>
-            <td class="open"></td>
-            <td class="open"></td>
+            <td data-row=1 data-column=0 class="open"></td>
+            <td data-row=1 data-column=1 class="open"></td>
+            <td data-row=1 data-column=2 class="open"></td>
           </tr>
           <tr id="row2">
-            <td class="open"></td>
-            <td class="open"></td>
-            <td class="open"></td>
+            <td data-row=2 data-column=0 class="open"></td>
+            <td data-row=2 data-column=1 class="open"></td>
+            <td data-row=2 data-column=2 class="open"></td>
           </tr>
         </table>
     </div>
     <div id="information">
         <h1 id="status">
-            It is X's turn.
+            It is your turn.
         </h1>
         <h2 id="x-id">
-            X - CPU
+            X - Player
         </h2>
         <h2 id="o-id">
-            O - Player
+            O - Computer
         </h2>
     </div>
 

@@ -14,10 +14,16 @@ svg {
     pointer-events: none;
 }
 
-line {
+line, path {
     display: none;
     animation: draw 2s 1 forwards;
-    stroke-width: 2;
+    stroke-width: 4;
+}
+
+path#cats-drawtime{
+    display: inline;
+    stroke-dasharray: 559;
+    stroke-dashoffset: 559;
 }
 
 line#diagonal-drawtime {
