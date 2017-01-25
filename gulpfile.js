@@ -40,3 +40,10 @@ gulp.task('browserify', function () {
     .pipe(source('bundle.js'))
     .pipe(gulp.dest('./public/'));
 });
+
+gulp.task('browserify-tests', function(){
+  return browserify('jasmine/spec/spec-requirer.js')
+    .bundle()
+    .pipe(source('bundlespec.js'))
+    .pipe(gulp.dest('jasmine/spec/'));
+});

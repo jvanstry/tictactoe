@@ -5,5 +5,3 @@ Who doesn't just love to play Tic Tac Toe?? Test your mettle at https://frozen-l
 1. clone and cd to directory
 2. `npm install` to fulfill dependencies
 3. `gulp` to start server
-
-###Tests coming soon!
