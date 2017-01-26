@@ -1,9 +1,9 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var X_CLASS_NAME = 'x';
 var O_CLASS_NAME = 'o';
+var BOARD_DOM_ID = 'board';
 
-
-exports.boardDOM = document.getElementById('board');
+exports.boardDOM = document.getElementById(BOARD_DOM_ID);
 exports.markWinner = function(turnInfo){
   var idToAdd, y1, x1, y2, x2;
 
@@ -49,6 +49,17 @@ exports.markWinner = function(turnInfo){
     lineDOMElement.id = '';
   }, 4400);
 }
+
+exports.addClickHandlerToBoardElement = function(handler){
+  var boardDOMElement = document.getElementById(BOARD_DOM_ID);
+  boardDOMElement.addEventListener('click', handler, false);
+}
+
+exports.removeClickHandlerFromBoardElement = function(handler){
+  var boardDOMElement = document.getElementById(BOARD_DOM_ID);
+  boardDOMElement.removeEventListener('click', handler, false);
+}
+
 exports.markSelection = function(row, col, selectionIsX){
   var spotIndex = row * 3 + col;
   var selectionPieceClassName = selectionIsX ? X_CLASS_NAME : O_CLASS_NAME;
@@ -95,12 +106,20 @@ exports.determineSelection = function(board, pieceValues, numberOfTurns){
   // first cover basic 1st or 2nd move strategy
   var isFirstMoveOrHumanHasTakenCenter = numberOfTurns === 0 || numberOfTurns === 1 && board[1][1] !== pieceValues.empty;
   var isSecondMoveAndCenterIsOpen = numberOfTurns === 1 && board[1][1] === pieceValues.empty;
+  var isFourthMoveAndHumanHasOpposingCorners = numberOfTurns === 3 
+    && (
+        (board[0][0] === pieceValues.human && board[2][2] === pieceValues.human)
+        || (board[0][2] === pieceValues.human && board[2][0] === pieceValues.human)
+       );
 
   if (isFirstMoveOrHumanHasTakenCenter){
     spot.row = 0;
     spot.column = 0;
   }else if (isSecondMoveAndCenterIsOpen){
     spot.row = 1;
+    spot.column = 1;
+  }else if (isFourthMoveAndHumanHasOpposingCorners){
+    spot.row = 0;
     spot.column = 1;
   }
 
@@ -233,76 +252,74 @@ var X_VALUE = 1;
 
 var board = require('./board');
 var boardView = require('./board-view');
+exports.boardView = boardView;
+
 var cpuBrain = require('./cpu');
 var infoView = require('./info-view');
+exports.infoView = infoView;
 
 var humanIsX = true;
 var firstGameOfSession = true;
 var numberOfTurns = 0;
 
-document.addEventListener("DOMContentLoaded", function() {
-  beginGame();
-});
-
-function beginGame(){
+exports.beginGame = function beginGame(){
   board.resetSpots(EMPTY_VALUE);
 
   if(firstGameOfSession){
     firstGameOfSession = false;
   }else{
-    infoView.flipPieceIds();
-    boardView.reset();
+    exports.infoView.flipPieceIds();
+    exports.boardView.reset();
     numberOfTurns = 0;
     humanIsX = !humanIsX;
   }
 
   // We have arbitrarily decided that X always goes first
   if (humanIsX){
-    humansTurn(runGame);
+    exports.humansTurn(exports.runGame);
   }else{
-    runGame();
+    exports.runGame();
   }
 }
 
-function runGame(){
+exports.runGame = function runGame(){
   var isCatsGame = checkForCatsGame();
 
   if(isCatsGame){
-    handleCatsGame();
+    exports.handleCatsGame();
     return;
   }
 
-  var turnInfo = cpusTurn();
+  var turnInfo = exports.cpusTurn();
   numberOfTurns++;
 
   if(turnInfo.winType){
-    infoView.updateStatusText('CPU won... New game starting soon.');
-    boardView.markWinner(turnInfo);
-    startNewGame();
+    exports.infoView.updateStatusText('CPU won... New game starting soon.');
+    exports.boardView.markWinner(turnInfo);
+    exports.startNewGame();
     return;
   }
 
   isCatsGame = checkForCatsGame();
 
   if(isCatsGame){
-    handleCatsGame();
+    exports.handleCatsGame();
     return;
   }
 
-  humansTurn(runGame);
+  exports.humansTurn(exports.runGame);
 }
 
-function handleCatsGame(){
-  boardView.markCatsGame();
-  infoView.updateStatusText('Cat\'s game! New game starting soon.' );
-  startNewGame();
+exports.handleCatsGame = function handleCatsGame(){
+  exports.boardView.markCatsGame();
+  exports.infoView.updateStatusText('Cat\'s game! New game starting soon.' );
+  exports.startNewGame();
 }
 
-function humansTurn(cb){
-  infoView.updateStatusText('It\'s your turn!');
+exports.humansTurn = function humansTurn(cb){
+  exports.infoView.updateStatusText('It\'s your turn!');
 
-  var boardDOMElement = document.getElementById('board');
-  boardDOMElement.addEventListener('click', handleUserSelection, false);
+  exports.boardView.addClickHandlerToBoardElement(handleUserSelection);
 
   function handleUserSelection(e){
     var clickedSquare = e.target;
@@ -311,20 +328,20 @@ function humansTurn(cb){
       var selectedRow = parseInt(clickedSquare.dataset.row);
       var selectedCol = parseInt(clickedSquare.dataset.column);
 
-      boardView.markSelection(selectedRow, selectedCol, humanIsX);
+      exports.boardView.markSelection(selectedRow, selectedCol, humanIsX);
 
       var humanPieceValue = humanIsX ? X_VALUE : O_VALUE;
       board.selectionMade(humanPieceValue, selectedRow, selectedCol);
 
       numberOfTurns++;
-      boardDOMElement.removeEventListener(e.type, arguments.callee, false);
+      exports.boardView.removeClickHandlerFromBoardElement(arguments.callee);
       cb();
     }
   }
 }
 
-function cpusTurn(){
-  infoView.updateStatusText('Waiting on Mr. CPU to play.');
+exports.cpusTurn = function cpusTurn(){
+  exports.infoView.updateStatusText('Waiting on Mr. CPU to play.');
 
   var pieceValuesOnBoard = {
     empty: EMPTY_VALUE, 
@@ -335,13 +352,13 @@ function cpusTurn(){
   var spotToTake = cpuBrain.determineSelection(board.spots, pieceValuesOnBoard, numberOfTurns);
 
   board.selectionMade(pieceValuesOnBoard.cpu, spotToTake.row, spotToTake.column);
-  boardView.markSelection(spotToTake.row, spotToTake.column, !humanIsX);
+  exports.boardView.markSelection(spotToTake.row, spotToTake.column, !humanIsX);
   return spotToTake;
 }
 
-function startNewGame(){
+exports.startNewGame = function startNewGame(){
   setTimeout(function(){
-    beginGame();
+    exports.beginGame();
   }, 4500)
 }
 
@@ -365,4 +382,10 @@ exports.updateStatusText = function(statusText){
 
   statusDisplayDOM.textContent = statusText;
 }
-},{}]},{},[4]);
+},{}],6:[function(require,module,exports){
+var gameController = require('./game-controller');
+
+document.addEventListener("DOMContentLoaded", function() {
+  gameController.beginGame();
+});
+},{"./game-controller":4}]},{},[6]);

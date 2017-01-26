@@ -4,12 +4,20 @@ exports.determineSelection = function(board, pieceValues, numberOfTurns){
   // first cover basic 1st or 2nd move strategy
   var isFirstMoveOrHumanHasTakenCenter = numberOfTurns === 0 || numberOfTurns === 1 && board[1][1] !== pieceValues.empty;
   var isSecondMoveAndCenterIsOpen = numberOfTurns === 1 && board[1][1] === pieceValues.empty;
+  var isFourthMoveAndHumanHasOpposingCorners = numberOfTurns === 3 
+    && (
+        (board[0][0] === pieceValues.human && board[2][2] === pieceValues.human)
+        || (board[0][2] === pieceValues.human && board[2][0] === pieceValues.human)
+       );
 
   if (isFirstMoveOrHumanHasTakenCenter){
     spot.row = 0;
     spot.column = 0;
   }else if (isSecondMoveAndCenterIsOpen){
     spot.row = 1;
+    spot.column = 1;
+  }else if (isFourthMoveAndHumanHasOpposingCorners){
+    spot.row = 0;
     spot.column = 1;
   }
 
