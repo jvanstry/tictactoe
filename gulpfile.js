@@ -7,16 +7,16 @@ var browserify = require('browserify');
 var source = require('vinyl-source-stream');
 
 gulp.task('default', ['browserify', 'browser-sync'], function () {
-    gulp.watch(["public/styles.css", "public/game.html"], reload);
-    gulp.watch(["public/scripts/*.js"], ['browserify', reload]);
+  gulp.watch(["public/styles.css", "public/game.html"], reload);
+  gulp.watch(["public/scripts/*.js"], ['browserify', reload]);
 });
 
 gulp.task('browser-sync', ['nodemon'], function() {
   browserSync.init(null, {
     proxy: "http://localhost:8080",
-        files: ["public/**/*.*"],
-        browser: "google chrome",
-        port: 7000,
+    files: ["public/**/*.*", "jasmine/spec/*.js"],
+    browser: "google chrome",
+    port: 7000,
   });
 });
 
@@ -35,10 +35,16 @@ gulp.task('nodemon', function (cb) {
 });
 
 gulp.task('browserify', function () {
-  return browserify('public/scripts/game-controller.js')
+  return browserify('public/scripts/main.js')
     .bundle()
     .pipe(source('bundle.js'))
     .pipe(gulp.dest('./public/'));
+});
+
+gulp.task('test-serve', ['set-test-node-env', 'browserify-tests', 'browserify', 'browser-sync'],function(){
+  gulp.watch(["public/styles.css", "public/game.html"], reload);
+  gulp.watch(["public/scripts/*.js"], ['browserify', reload]);  
+  gulp.watch(["jasmine/spec/*.js"], ['browserify-tests', reload]);  
 });
 
 gulp.task('browserify-tests', function(){
