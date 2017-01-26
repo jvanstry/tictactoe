@@ -47,6 +47,20 @@ exports.runSpecs = function(){
       expect(spotSelected.column).toEqual(0);      
     });
 
+    it('should play in non corner if 4th move and human has opposing corners', function(){
+      var numberOfPreviousTurns = 3;
+
+      board.spots = [[pieceValues.human, pieceValues.empty, pieceValues.empty], 
+                     [pieceValues.empty, pieceValues.cpu, pieceValues.empty], 
+                     [pieceValues.empty, pieceValues.empty, pieceValues.human]]
+
+
+      var spotSelected = cpu.determineSelection(board.spots, pieceValues, numberOfPreviousTurns);
+
+      expect(spotSelected.row).toEqual(0);
+      expect(spotSelected.column).toEqual(1);  
+    });
+
     it('should play winning move if available', function(){
       var numberOfPreviousTurns = 4;
 
