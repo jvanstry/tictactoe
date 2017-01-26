@@ -1,8 +1,8 @@
 var X_CLASS_NAME = 'x';
 var O_CLASS_NAME = 'o';
+var BOARD_DOM_ID = 'board';
 
-
-exports.boardDOM = document.getElementById('board');
+exports.boardDOM = document.getElementById(BOARD_DOM_ID);
 exports.markWinner = function(turnInfo){
   var idToAdd, y1, x1, y2, x2;
 
@@ -48,6 +48,17 @@ exports.markWinner = function(turnInfo){
     lineDOMElement.id = '';
   }, 4400);
 }
+
+exports.addClickHandlerToBoardElement = function(handler){
+  var boardDOMElement = document.getElementById(BOARD_DOM_ID);
+  boardDOMElement.addEventListener('click', handler, false);
+}
+
+exports.removeClickHandlerFromBoardElement = function(handler){
+  var boardDOMElement = document.getElementById(BOARD_DOM_ID);
+  boardDOMElement.removeEventListener('click', handler, false);
+}
+
 exports.markSelection = function(row, col, selectionIsX){
   var spotIndex = row * 3 + col;
   var selectionPieceClassName = selectionIsX ? X_CLASS_NAME : O_CLASS_NAME;

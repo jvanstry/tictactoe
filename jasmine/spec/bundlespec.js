@@ -157,11 +157,6 @@ exports.runSpecs = function(){
       spyOn(gameController.infoView, 'updateStatusText');    
     })
 
-
-    it('should wire up', function(){
-      expect(2 + 2).toEqual(4); 
-    });
-
     it('expect begin game to trigger click handler on board', function(){
       spyOn(gameController, 'beginGame').and.callThrough();
       spyOn(gameController.boardView, 'addClickHandlerToBoardElement')
