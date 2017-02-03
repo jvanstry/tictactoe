@@ -17,7 +17,7 @@ exports.runSpecs = function(){
   describe('The Cpu Brain', function(){
     it('should take corner spot on first move', function(){
       var numberOfPreviousTurns = 0;
-      var spotSelected = cpu.determineSelection(board, pieceValues, numberOfPreviousTurns);
+      var spotSelected = cpu.determineSelection(board.spots, pieceValues, numberOfPreviousTurns);
 
       expect(spotSelected.row).toEqual(0);
       expect(spotSelected.column).toEqual(0); 

@@ -1,8 +1,26 @@
 exports.determineSelection = function(board, pieceValues, numberOfTurns){
+  var spot = {}
+
+  if (numberOfTurns === 1 || numberOfTurns === 3){
+    spot = selectSpotInSpecialSecondOrFourthMoveSituations(board, pieceValues, numberOfTurns);
+  }
+
+  if(spot.row !== undefined)
+    return spot;
+
+  if (numberOfTurns >= 3){
+    spot = selectWinningSpotIfPossibleOrBlockingSpotIfNecessary(pieceValues, board);
+  }
+
+  if(spot.row !== undefined)
+    return spot;
+
+  return selectFirstAvailableSpot(pieceValues, board);
+}
+
+function selectSpotInSpecialSecondOrFourthMoveSituations(board, pieceValues, numberOfTurns){
   var spot = {};
 
-  // first cover basic 1st or 2nd move strategy
-  var isFirstMoveOrHumanHasTakenCenter = numberOfTurns === 0 || numberOfTurns === 1 && board[1][1] !== pieceValues.empty;
   var isSecondMoveAndCenterIsOpen = numberOfTurns === 1 && board[1][1] === pieceValues.empty;
   var isFourthMoveAndHumanHasOpposingCorners = numberOfTurns === 3 
     && (
@@ -10,10 +28,7 @@ exports.determineSelection = function(board, pieceValues, numberOfTurns){
         || (board[0][2] === pieceValues.human && board[2][0] === pieceValues.human)
        );
 
-  if (isFirstMoveOrHumanHasTakenCenter){
-    spot.row = 0;
-    spot.column = 0;
-  }else if (isSecondMoveAndCenterIsOpen){
+  if (isSecondMoveAndCenterIsOpen){
     spot.row = 1;
     spot.column = 1;
   }else if (isFourthMoveAndHumanHasOpposingCorners){
@@ -21,10 +36,38 @@ exports.determineSelection = function(board, pieceValues, numberOfTurns){
     spot.column = 1;
   }
 
-  if(spot.row !== undefined)
-    return spot;
+  return spot;
+}
 
-  // now check if we can win
+function selectWinningSpotIfPossibleOrBlockingSpotIfNecessary(pieceValues, board){
+  var spot = {}
+
+  var lineSumIndicatingPotentialWin = pieceValues.cpu + pieceValues.cpu + pieceValues.empty;
+  var lineSumIndicatingPotentialLoss = pieceValues.human + pieceValues.human + pieceValues.empty;
+  var sumsOfInterest = [lineSumIndicatingPotentialWin, lineSumIndicatingPotentialLoss];
+
+  var lookingForBlock = false; //first time through will be looking for a win, need to unset winType on spot obj when looking for block
+
+  for(var i = 0; i < 2; i++){
+    var matchedLine = checkLinesForDesiredSum(sumsOfInterest[i], board);
+
+    if (matchedLine){
+      spot = determineProperSpotToBlockOrWin(matchedLine, pieceValues, board);
+      if (lookingForBlock){
+        spot.winType = undefined;
+      }
+
+      return spot;
+    }
+
+    lookingForBlock = true;
+  }
+  return spot;
+  /*
+  OLD, pre-abstracted way of achieving the same thing as above.
+  I hate committing commented code but I left it in here for ease of comparison if desired.
+
+
   var winningInfo = checkLinesForDesiredSum(pieceValues.cpu + pieceValues.cpu + pieceValues.empty, board);
 
   if(winningInfo){
@@ -39,8 +82,12 @@ exports.determineSelection = function(board, pieceValues, numberOfTurns){
   if(blockingInfo){
     return determineProperSpotToBlockOrWin(blockingInfo, pieceValues, board);
   }
+  */
+}
 
-  // otherwise just find first empty spot and take it
+function selectFirstAvailableSpot(pieceValues, board){
+  var spot = {};
+
   for(var i = 0; i < 3; i++){
     if (board[i][0] === pieceValues.empty){
       spot.row = i;
@@ -84,61 +131,57 @@ function checkLinesForDesiredSum(sum, board){
 }
 
 function determineProperSpotToBlockOrWin(relevantLineInfo, pieceValues, board){
-  var spot = {};
-
   switch(relevantLineInfo.winType){
     case 'horizontal':
-      spot.row = relevantLineInfo.row;
 
       if (board[relevantLineInfo.row][0] === pieceValues.empty){
-        spot.column = 0;
+        relevantLineInfo.column = 0;
       }else if(board[relevantLineInfo.row][1] === pieceValues.empty){
-        spot.column = 1;
+        relevantLineInfo.column = 1;
       }else{
-        spot.column = 2;
+        relevantLineInfo.column = 2;
       }
 
       break;
     case 'vertical':
-      spot.column = relevantLineInfo.column;
 
       if (board[0][relevantLineInfo.column] === pieceValues.empty){
-        spot.row = 0;
+        relevantLineInfo.row = 0;
       }else if(board[1][relevantLineInfo.column] === pieceValues.empty){
-        spot.row = 1;
+        relevantLineInfo.row = 1;
       }else{
-        spot.row = 2;
+        relevantLineInfo.row = 2;
       }
 
       break;
     case 'top-left-bottom-right':
 
       if (board[0][0] === pieceValues.empty){
-        spot.row = 0;
-        spot.column = 0;
+        relevantLineInfo.row = 0;
+        relevantLineInfo.column = 0;
       }else if(board[1][1] === pieceValues.empty){
-        spot.row = 1;
-        spot.column = 1;
+        relevantLineInfo.row = 1;
+        relevantLineInfo.column = 1;
       }else{
-        spot.row = 2;
-        spot.column = 2;
+        relevantLineInfo.row = 2;
+        relevantLineInfo.column = 2;
       }
 
       break;
     case 'top-right-bottom-left':
 
       if (board[0][2] === pieceValues.empty){
-        spot.row = 0;
-        spot.column = 2;
+        relevantLineInfo.row = 0;
+        relevantLineInfo.column = 2;
       }else if(board[1][1] === pieceValues.empty){
-        spot.row = 1;
-        spot.column = 1;
+        relevantLineInfo.row = 1;
+        relevantLineInfo.column = 1;
       }else{
-        spot.row = 2;
-        spot.column = 0;
+        relevantLineInfo.row = 2;
+        relevantLineInfo.column = 0;
       }
 
       break;
   }
-  return spot;
+  return relevantLineInfo;
 }

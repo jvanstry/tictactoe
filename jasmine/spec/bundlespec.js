@@ -10,7 +10,7 @@ exports.runSpecs = function(){
     })
 
     it('should represent tic tac toe board with 2d array', function(){
-      var randomNumber = specHelper.getRandomIntBetween(0, 2);
+      var randomNumber = specHelper.getRandomTicTacToeBoardSpotIndex();
 
       expect(Array.isArray(board.spots[randomNumber])).toBeTruthy(); 
     });
@@ -20,16 +20,16 @@ exports.runSpecs = function(){
 
       board.resetSpots(emptyValue);
 
-      var randomNumber1 = specHelper.getRandomIntBetween(0, 2);
-      var randomNumber2 = specHelper.getRandomIntBetween(0, 2);
+      var randomNumber1 = specHelper.getRandomTicTacToeBoardSpotIndex();
+      var randomNumber2 = specHelper.getRandomTicTacToeBoardSpotIndex();
 
       expect(board.spots[randomNumber1][randomNumber2]).toEqual(emptyValue);
     });
 
     it('should set value in spots array with selectionMade', function(){
       var setValue = 25;
-      var randomNumber1 = specHelper.getRandomIntBetween(0, 2);
-      var randomNumber2 = specHelper.getRandomIntBetween(0, 2);
+      var randomNumber1 = specHelper.getRandomTicTacToeBoardSpotIndex();
+      var randomNumber2 = specHelper.getRandomTicTacToeBoardSpotIndex();
 
       board.selectionMade(setValue, randomNumber1, randomNumber2);
 
@@ -58,7 +58,7 @@ exports.runSpecs = function(){
   describe('The Cpu Brain', function(){
     it('should take corner spot on first move', function(){
       var numberOfPreviousTurns = 0;
-      var spotSelected = cpu.determineSelection(board, pieceValues, numberOfPreviousTurns);
+      var spotSelected = cpu.determineSelection(board.spots, pieceValues, numberOfPreviousTurns);
 
       expect(spotSelected.row).toEqual(0);
       expect(spotSelected.column).toEqual(0); 
@@ -152,20 +152,21 @@ var gameController = require('./../../public/scripts/game-controller');
 
 exports.runSpecs = function(){
   describe('The Game Controller', function(){
-    beforeEach(function(){
-      spyOn(gameController.infoView, 'flipPieceIds');
-      spyOn(gameController.infoView, 'updateStatusText');    
-    })
+    describe('beginGame', function(){
+      beforeEach(function(){
+        spyOn(gameController.infoView, 'flipPieceIds');
+        spyOn(gameController.infoView, 'updateStatusText');    
+      })
 
-    it('expect begin game to trigger click handler on board', function(){
-      spyOn(gameController, 'beginGame').and.callThrough();
-      spyOn(gameController.boardView, 'addClickHandlerToBoardElement')
+      it('expect begin game to trigger click handler on board', function(){
+        spyOn(gameController, 'beginGame').and.callThrough();
+        spyOn(gameController.boardView, 'addClickHandlerToBoardElement')
 
-      gameController.beginGame();
+        gameController.beginGame();
 
-      expect(gameController.boardView.addClickHandlerToBoardElement).toHaveBeenCalled();
+        expect(gameController.boardView.addClickHandlerToBoardElement).toHaveBeenCalled();
+      });
     });
-
   });
 }
 },{"./../../public/scripts/game-controller":11,"./spec-helper":4}],4:[function(require,module,exports){
@@ -174,10 +175,10 @@ var path = require('path');
 
 exports.pathToSource = (path.join(__dirname, '../../public/scripts/'));
 
-exports.getRandomIntBetween = function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min)) + min;
+exports.getRandomTicTacToeBoardSpotIndex= function getRandomTicTacToeBoardSpotIndex(){
+  min = Math.ceil(0);
+  max = Math.floor(2);
+  return Math.floor(Math.random() * 2);
 }
 }).call(this,"/jasmine/spec")
 },{"path":6}],5:[function(require,module,exports){
@@ -703,10 +704,28 @@ exports.selectionMade = function(value, row, col){
 }
 },{}],10:[function(require,module,exports){
 exports.determineSelection = function(board, pieceValues, numberOfTurns){
+  var spot = {}
+
+  if (numberOfTurns === 1 || numberOfTurns === 3){
+    spot = selectSpotInSpecialSecondOrFourthMoveSituations(board, pieceValues, numberOfTurns);
+  }
+
+  if(spot.row !== undefined)
+    return spot;
+
+  if (numberOfTurns >= 3){
+    spot = selectWinningSpotIfPossibleOrBlockingSpotIfNecessary(pieceValues, board);
+  }
+
+  if(spot.row !== undefined)
+    return spot;
+
+  return selectFirstAvailableSpot(pieceValues, board);
+}
+
+function selectSpotInSpecialSecondOrFourthMoveSituations(board, pieceValues, numberOfTurns){
   var spot = {};
 
-  // first cover basic 1st or 2nd move strategy
-  var isFirstMoveOrHumanHasTakenCenter = numberOfTurns === 0 || numberOfTurns === 1 && board[1][1] !== pieceValues.empty;
   var isSecondMoveAndCenterIsOpen = numberOfTurns === 1 && board[1][1] === pieceValues.empty;
   var isFourthMoveAndHumanHasOpposingCorners = numberOfTurns === 3 
     && (
@@ -714,10 +733,7 @@ exports.determineSelection = function(board, pieceValues, numberOfTurns){
         || (board[0][2] === pieceValues.human && board[2][0] === pieceValues.human)
        );
 
-  if (isFirstMoveOrHumanHasTakenCenter){
-    spot.row = 0;
-    spot.column = 0;
-  }else if (isSecondMoveAndCenterIsOpen){
+  if (isSecondMoveAndCenterIsOpen){
     spot.row = 1;
     spot.column = 1;
   }else if (isFourthMoveAndHumanHasOpposingCorners){
@@ -725,10 +741,38 @@ exports.determineSelection = function(board, pieceValues, numberOfTurns){
     spot.column = 1;
   }
 
-  if(spot.row !== undefined)
-    return spot;
+  return spot;
+}
 
-  // now check if we can win
+function selectWinningSpotIfPossibleOrBlockingSpotIfNecessary(pieceValues, board){
+  var spot = {}
+
+  var lineSumIndicatingPotentialWin = pieceValues.cpu + pieceValues.cpu + pieceValues.empty;
+  var lineSumIndicatingPotentialLoss = pieceValues.human + pieceValues.human + pieceValues.empty;
+  var sumsOfInterest = [lineSumIndicatingPotentialWin, lineSumIndicatingPotentialLoss];
+
+  var lookingForBlock = false; //first time through will be looking for a win, need to unset winType on spot obj when looking for block
+
+  for(var i = 0; i < 2; i++){
+    var matchedLine = checkLinesForDesiredSum(sumsOfInterest[i], board);
+
+    if (matchedLine){
+      spot = determineProperSpotToBlockOrWin(matchedLine, pieceValues, board);
+      if (lookingForBlock){
+        spot.winType = undefined;
+      }
+
+      return spot;
+    }
+
+    lookingForBlock = true;
+  }
+  return spot;
+  /*
+  OLD, pre-abstracted way of achieving the same thing as above.
+  I hate committing commented code but I left it in here for ease of comparison if desired.
+
+
   var winningInfo = checkLinesForDesiredSum(pieceValues.cpu + pieceValues.cpu + pieceValues.empty, board);
 
   if(winningInfo){
@@ -743,8 +787,12 @@ exports.determineSelection = function(board, pieceValues, numberOfTurns){
   if(blockingInfo){
     return determineProperSpotToBlockOrWin(blockingInfo, pieceValues, board);
   }
+  */
+}
 
-  // otherwise just find first empty spot and take it
+function selectFirstAvailableSpot(pieceValues, board){
+  var spot = {};
+
   for(var i = 0; i < 3; i++){
     if (board[i][0] === pieceValues.empty){
       spot.row = i;
@@ -788,66 +836,61 @@ function checkLinesForDesiredSum(sum, board){
 }
 
 function determineProperSpotToBlockOrWin(relevantLineInfo, pieceValues, board){
-  var spot = {};
-
   switch(relevantLineInfo.winType){
     case 'horizontal':
-      spot.row = relevantLineInfo.row;
 
       if (board[relevantLineInfo.row][0] === pieceValues.empty){
-        spot.column = 0;
+        relevantLineInfo.column = 0;
       }else if(board[relevantLineInfo.row][1] === pieceValues.empty){
-        spot.column = 1;
+        relevantLineInfo.column = 1;
       }else{
-        spot.column = 2;
+        relevantLineInfo.column = 2;
       }
 
       break;
     case 'vertical':
-      spot.column = relevantLineInfo.column;
 
       if (board[0][relevantLineInfo.column] === pieceValues.empty){
-        spot.row = 0;
+        relevantLineInfo.row = 0;
       }else if(board[1][relevantLineInfo.column] === pieceValues.empty){
-        spot.row = 1;
+        relevantLineInfo.row = 1;
       }else{
-        spot.row = 2;
+        relevantLineInfo.row = 2;
       }
 
       break;
     case 'top-left-bottom-right':
 
       if (board[0][0] === pieceValues.empty){
-        spot.row = 0;
-        spot.column = 0;
+        relevantLineInfo.row = 0;
+        relevantLineInfo.column = 0;
       }else if(board[1][1] === pieceValues.empty){
-        spot.row = 1;
-        spot.column = 1;
+        relevantLineInfo.row = 1;
+        relevantLineInfo.column = 1;
       }else{
-        spot.row = 2;
-        spot.column = 2;
+        relevantLineInfo.row = 2;
+        relevantLineInfo.column = 2;
       }
 
       break;
     case 'top-right-bottom-left':
 
       if (board[0][2] === pieceValues.empty){
-        spot.row = 0;
-        spot.column = 2;
+        relevantLineInfo.row = 0;
+        relevantLineInfo.column = 2;
       }else if(board[1][1] === pieceValues.empty){
-        spot.row = 1;
-        spot.column = 1;
+        relevantLineInfo.row = 1;
+        relevantLineInfo.column = 1;
       }else{
-        spot.row = 2;
-        spot.column = 0;
+        relevantLineInfo.row = 2;
+        relevantLineInfo.column = 0;
       }
 
       break;
   }
-  return spot;
+  return relevantLineInfo;
 }
 },{}],11:[function(require,module,exports){
-// Empty spaces represented by -10, X's are represented by ones, and O's by zeroes
 var EMPTY_VALUE = -10;
 var O_VALUE = 0;
 var X_VALUE = 1;
@@ -878,13 +921,13 @@ exports.beginGame = function beginGame(){
 
   // We have arbitrarily decided that X always goes first
   if (humanIsX){
-    exports.humansTurn(exports.runGame);
+    exports.prepareForReceiveAndHandleHumanSelection(exports.runATurnForEachPlayer);
   }else{
-    exports.runGame();
+    exports.runATurnForEachPlayer();
   }
 }
 
-exports.runGame = function runGame(){
+exports.runATurnForEachPlayer = function runATurnForEachPlayer(){
   var isCatsGame = checkForCatsGame();
 
   if(isCatsGame){
@@ -892,13 +935,13 @@ exports.runGame = function runGame(){
     return;
   }
 
-  var turnInfo = exports.cpusTurn();
+  var turnInfo = exports.getAndMarkCpuSelection();
   numberOfTurns++;
 
   if(turnInfo.winType){
     exports.infoView.updateStatusText('CPU won... New game starting soon.');
     exports.boardView.markWinner(turnInfo);
-    exports.startNewGame();
+    exports.kickOffCountdownToNewGame();
     return;
   }
 
@@ -909,21 +952,21 @@ exports.runGame = function runGame(){
     return;
   }
 
-  exports.humansTurn(exports.runGame);
+  exports.prepareForReceiveAndHandleHumanSelection(exports.runATurnForEachPlayer);
 }
 
 exports.handleCatsGame = function handleCatsGame(){
   exports.boardView.markCatsGame();
   exports.infoView.updateStatusText('Cat\'s game! New game starting soon.' );
-  exports.startNewGame();
+  exports.kickOffCountdownToNewGame();
 }
 
-exports.humansTurn = function humansTurn(cb){
+exports.prepareForReceiveAndHandleHumanSelection = function prepareForReceiveAndHandleHumanSelection(cb){
   exports.infoView.updateStatusText('It\'s your turn!');
 
-  exports.boardView.addClickHandlerToBoardElement(handleUserSelection);
+  exports.boardView.addClickHandlerToBoardElement(markUserSelectionIfValid);
 
-  function handleUserSelection(e){
+  function markUserSelectionIfValid(e){
     var clickedSquare = e.target;
 
     if(clickedSquare.classList.contains('open')){
@@ -942,7 +985,7 @@ exports.humansTurn = function humansTurn(cb){
   }
 }
 
-exports.cpusTurn = function cpusTurn(){
+exports.getAndMarkCpuSelection = function getAndMarkCpuSelection(){
   exports.infoView.updateStatusText('Waiting on Mr. CPU to play.');
 
   var pieceValuesOnBoard = {
@@ -958,7 +1001,7 @@ exports.cpusTurn = function cpusTurn(){
   return spotToTake;
 }
 
-exports.startNewGame = function startNewGame(){
+exports.kickOffCountdownToNewGame = function kickOffCountdownToNewGame(){
   setTimeout(function(){
     exports.beginGame();
   }, 4500)

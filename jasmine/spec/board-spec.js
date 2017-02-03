@@ -9,7 +9,7 @@ exports.runSpecs = function(){
     })
 
     it('should represent tic tac toe board with 2d array', function(){
-      var randomNumber = specHelper.getRandomIntBetween(0, 2);
+      var randomNumber = specHelper.getRandomTicTacToeBoardSpotIndex();
 
       expect(Array.isArray(board.spots[randomNumber])).toBeTruthy(); 
     });
@@ -19,16 +19,16 @@ exports.runSpecs = function(){
 
       board.resetSpots(emptyValue);
 
-      var randomNumber1 = specHelper.getRandomIntBetween(0, 2);
-      var randomNumber2 = specHelper.getRandomIntBetween(0, 2);
+      var randomNumber1 = specHelper.getRandomTicTacToeBoardSpotIndex();
+      var randomNumber2 = specHelper.getRandomTicTacToeBoardSpotIndex();
 
       expect(board.spots[randomNumber1][randomNumber2]).toEqual(emptyValue);
     });
 
     it('should set value in spots array with selectionMade', function(){
       var setValue = 25;
-      var randomNumber1 = specHelper.getRandomIntBetween(0, 2);
-      var randomNumber2 = specHelper.getRandomIntBetween(0, 2);
+      var randomNumber1 = specHelper.getRandomTicTacToeBoardSpotIndex();
+      var randomNumber2 = specHelper.getRandomTicTacToeBoardSpotIndex();
 
       board.selectionMade(setValue, randomNumber1, randomNumber2);
 

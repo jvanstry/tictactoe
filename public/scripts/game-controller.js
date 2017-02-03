@@ -1,9 +1,9 @@
-// Empty spaces represented by -10, X's are represented by ones, and O's by zeroes
 var EMPTY_VALUE = -10;
 var O_VALUE = 0;
 var X_VALUE = 1;
 
 var board = require('./board');
+exports.board = board;
 var boardView = require('./board-view');
 exports.boardView = boardView;
 
@@ -11,12 +11,12 @@ var cpuBrain = require('./cpu');
 var infoView = require('./info-view');
 exports.infoView = infoView;
 
-var humanIsX = true;
+exports.humanIsX = true;
 var firstGameOfSession = true;
 var numberOfTurns = 0;
 
 exports.beginGame = function beginGame(){
-  board.resetSpots(EMPTY_VALUE);
+  exports.board.resetSpots(EMPTY_VALUE);
 
   if(firstGameOfSession){
     firstGameOfSession = false;
@@ -24,18 +24,18 @@ exports.beginGame = function beginGame(){
     exports.infoView.flipPieceIds();
     exports.boardView.reset();
     numberOfTurns = 0;
-    humanIsX = !humanIsX;
+    exports.humanIsX = !exports.humanIsX;
   }
 
   // We have arbitrarily decided that X always goes first
-  if (humanIsX){
-    exports.humansTurn(exports.runGame);
+  if (exports.humanIsX){
+    exports.prepareForReceiveAndHandleHumanSelection(exports.runATurnForEachPlayer);
   }else{
-    exports.runGame();
+    exports.runATurnForEachPlayer();
   }
 }
 
-exports.runGame = function runGame(){
+exports.runATurnForEachPlayer = function runATurnForEachPlayer(){
   var isCatsGame = checkForCatsGame();
 
   if(isCatsGame){
@@ -43,13 +43,13 @@ exports.runGame = function runGame(){
     return;
   }
 
-  var turnInfo = exports.cpusTurn();
+  var turnInfo = exports.getAndMarkCpuSelection();
   numberOfTurns++;
 
   if(turnInfo.winType){
     exports.infoView.updateStatusText('CPU won... New game starting soon.');
     exports.boardView.markWinner(turnInfo);
-    exports.startNewGame();
+    exports.kickOffCountdownToNewGame();
     return;
   }
 
@@ -60,31 +60,31 @@ exports.runGame = function runGame(){
     return;
   }
 
-  exports.humansTurn(exports.runGame);
+  exports.prepareForReceiveAndHandleHumanSelection(exports.runATurnForEachPlayer);
 }
 
 exports.handleCatsGame = function handleCatsGame(){
   exports.boardView.markCatsGame();
   exports.infoView.updateStatusText('Cat\'s game! New game starting soon.' );
-  exports.startNewGame();
+  exports.kickOffCountdownToNewGame();
 }
 
-exports.humansTurn = function humansTurn(cb){
+exports.prepareForReceiveAndHandleHumanSelection = function prepareForReceiveAndHandleHumanSelection(cb){
   exports.infoView.updateStatusText('It\'s your turn!');
 
-  exports.boardView.addClickHandlerToBoardElement(handleUserSelection);
+  exports.boardView.addClickHandlerToBoardElement(markUserSelectionIfValid);
 
-  function handleUserSelection(e){
+  function markUserSelectionIfValid(e){
     var clickedSquare = e.target;
 
     if(clickedSquare.classList.contains('open')){
       var selectedRow = parseInt(clickedSquare.dataset.row);
       var selectedCol = parseInt(clickedSquare.dataset.column);
 
-      exports.boardView.markSelection(selectedRow, selectedCol, humanIsX);
+      exports.boardView.markSelection(selectedRow, selectedCol, exports.humanIsX);
 
-      var humanPieceValue = humanIsX ? X_VALUE : O_VALUE;
-      board.selectionMade(humanPieceValue, selectedRow, selectedCol);
+      var humanPieceValue = exports.humanIsX ? X_VALUE : O_VALUE;
+      exports.board.selectionMade(humanPieceValue, selectedRow, selectedCol);
 
       numberOfTurns++;
       exports.boardView.removeClickHandlerFromBoardElement(arguments.callee);
@@ -93,23 +93,23 @@ exports.humansTurn = function humansTurn(cb){
   }
 }
 
-exports.cpusTurn = function cpusTurn(){
+exports.getAndMarkCpuSelection = function getAndMarkCpuSelection(){
   exports.infoView.updateStatusText('Waiting on Mr. CPU to play.');
 
   var pieceValuesOnBoard = {
     empty: EMPTY_VALUE, 
-    human: humanIsX ? X_VALUE : O_VALUE,
-    cpu: humanIsX ? O_VALUE : X_VALUE
+    human: exports.humanIsX ? X_VALUE : O_VALUE,
+    cpu: exports.humanIsX ? O_VALUE : X_VALUE
   }
 
-  var spotToTake = cpuBrain.determineSelection(board.spots, pieceValuesOnBoard, numberOfTurns);
+  var spotToTake = cpuBrain.determineSelection(exports.board.spots, pieceValuesOnBoard, numberOfTurns);
 
-  board.selectionMade(pieceValuesOnBoard.cpu, spotToTake.row, spotToTake.column);
-  exports.boardView.markSelection(spotToTake.row, spotToTake.column, !humanIsX);
+  exports.board.selectionMade(pieceValuesOnBoard.cpu, spotToTake.row, spotToTake.column);
+  exports.boardView.markSelection(spotToTake.row, spotToTake.column, !exports.humanIsX);
   return spotToTake;
 }
 
-exports.startNewGame = function startNewGame(){
+exports.kickOffCountdownToNewGame = function kickOffCountdownToNewGame(){
   setTimeout(function(){
     exports.beginGame();
   }, 4500)

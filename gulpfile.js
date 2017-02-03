@@ -41,7 +41,7 @@ gulp.task('browserify', function () {
     .pipe(gulp.dest('./public/'));
 });
 
-gulp.task('test-serve', ['set-test-node-env', 'browserify-tests', 'browserify', 'browser-sync'],function(){
+gulp.task('test-serve', ['browserify', 'browserify-tests', 'browser-sync'],function(){
   gulp.watch(["public/styles.css", "public/game.html"], reload);
   gulp.watch(["public/scripts/*.js"], ['browserify', reload]);  
   gulp.watch(["jasmine/spec/*.js"], ['browserify-tests', reload]);  
