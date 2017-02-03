@@ -1,8 +1,6 @@
 var X_CLASS_NAME = 'x';
 var O_CLASS_NAME = 'o';
-var BOARD_DOM_ID = 'board';
 
-exports.boardDOM = document.getElementById(BOARD_DOM_ID);
 exports.markWinner = function(turnInfo){
   var idToAdd, y1, x1, y2, x2;
 
@@ -49,13 +47,13 @@ exports.markWinner = function(turnInfo){
   }, 4400);
 }
 
-exports.addClickHandlerToBoardElement = function(handler){
-  var boardDOMElement = document.getElementById(BOARD_DOM_ID);
+exports.addClickHandlerToBoardElement = function(handler, id){
+  var boardDOMElement = document.getElementById(id);
   boardDOMElement.addEventListener('click', handler, false);
 }
 
-exports.removeClickHandlerFromBoardElement = function(handler){
-  var boardDOMElement = document.getElementById(BOARD_DOM_ID);
+exports.removeClickHandlerFromBoardElement = function(handler, id){
+  var boardDOMElement = document.getElementById(id);
   boardDOMElement.removeEventListener('click', handler, false);
 }
 

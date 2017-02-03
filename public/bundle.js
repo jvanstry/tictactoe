@@ -1,9 +1,7 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 var X_CLASS_NAME = 'x';
 var O_CLASS_NAME = 'o';
-var BOARD_DOM_ID = 'board';
 
-exports.boardDOM = document.getElementById(BOARD_DOM_ID);
 exports.markWinner = function(turnInfo){
   var idToAdd, y1, x1, y2, x2;
 
@@ -50,13 +48,13 @@ exports.markWinner = function(turnInfo){
   }, 4400);
 }
 
-exports.addClickHandlerToBoardElement = function(handler){
-  var boardDOMElement = document.getElementById(BOARD_DOM_ID);
+exports.addClickHandlerToBoardElement = function(handler, id){
+  var boardDOMElement = document.getElementById(id);
   boardDOMElement.addEventListener('click', handler, false);
 }
 
-exports.removeClickHandlerFromBoardElement = function(handler){
-  var boardDOMElement = document.getElementById(BOARD_DOM_ID);
+exports.removeClickHandlerFromBoardElement = function(handler, id){
+  var boardDOMElement = document.getElementById(id);
   boardDOMElement.removeEventListener('click', handler, false);
 }
 
@@ -291,6 +289,7 @@ function determineProperSpotToBlockOrWin(relevantLineInfo, pieceValues, board){
 var EMPTY_VALUE = -10;
 var O_VALUE = 0;
 var X_VALUE = 1;
+exports.BOARD_DOM_ID = 'board';
 
 var board = require('./board');
 exports.board = board;
@@ -302,18 +301,18 @@ var infoView = require('./info-view');
 exports.infoView = infoView;
 
 exports.humanIsX = true;
-var firstGameOfSession = true;
-var numberOfTurns = 0;
+exports.firstGameOfSession = true;
+exports.numberOfTurns = 0;
 
 exports.beginGame = function beginGame(){
   exports.board.resetSpots(EMPTY_VALUE);
 
-  if(firstGameOfSession){
-    firstGameOfSession = false;
+  if(exports.firstGameOfSession){
+    exports.firstGameOfSession = false;
   }else{
     exports.infoView.flipPieceIds();
     exports.boardView.reset();
-    numberOfTurns = 0;
+    exports.numberOfTurns = 0;
     exports.humanIsX = !exports.humanIsX;
   }
 
@@ -326,7 +325,7 @@ exports.beginGame = function beginGame(){
 }
 
 exports.runATurnForEachPlayer = function runATurnForEachPlayer(){
-  var isCatsGame = checkForCatsGame();
+  var isCatsGame = exports.checkForCatsGame();
 
   if(isCatsGame){
     exports.handleCatsGame();
@@ -334,7 +333,7 @@ exports.runATurnForEachPlayer = function runATurnForEachPlayer(){
   }
 
   var turnInfo = exports.getAndMarkCpuSelection();
-  numberOfTurns++;
+  exports.numberOfTurns++;
 
   if(turnInfo.winType){
     exports.infoView.updateStatusText('CPU won... New game starting soon.');
@@ -343,7 +342,7 @@ exports.runATurnForEachPlayer = function runATurnForEachPlayer(){
     return;
   }
 
-  isCatsGame = checkForCatsGame();
+  isCatsGame = exports.checkForCatsGame();
 
   if(isCatsGame){
     exports.handleCatsGame();
@@ -362,7 +361,7 @@ exports.handleCatsGame = function handleCatsGame(){
 exports.prepareForReceiveAndHandleHumanSelection = function prepareForReceiveAndHandleHumanSelection(cb){
   exports.infoView.updateStatusText('It\'s your turn!');
 
-  exports.boardView.addClickHandlerToBoardElement(markUserSelectionIfValid);
+  exports.boardView.addClickHandlerToBoardElement(markUserSelectionIfValid, exports.BOARD_DOM_ID);
 
   function markUserSelectionIfValid(e){
     var clickedSquare = e.target;
@@ -376,8 +375,8 @@ exports.prepareForReceiveAndHandleHumanSelection = function prepareForReceiveAnd
       var humanPieceValue = exports.humanIsX ? X_VALUE : O_VALUE;
       exports.board.selectionMade(humanPieceValue, selectedRow, selectedCol);
 
-      numberOfTurns++;
-      exports.boardView.removeClickHandlerFromBoardElement(arguments.callee);
+      exports.numberOfTurns++;
+      exports.boardView.removeClickHandlerFromBoardElement(arguments.callee, exports.BOARD_DOM_ID);
       cb();
     }
   }
@@ -392,7 +391,7 @@ exports.getAndMarkCpuSelection = function getAndMarkCpuSelection(){
     cpu: exports.humanIsX ? O_VALUE : X_VALUE
   }
 
-  var spotToTake = cpuBrain.determineSelection(exports.board.spots, pieceValuesOnBoard, numberOfTurns);
+  var spotToTake = cpuBrain.determineSelection(exports.board.spots, pieceValuesOnBoard, exports.numberOfTurns);
 
   exports.board.selectionMade(pieceValuesOnBoard.cpu, spotToTake.row, spotToTake.column);
   exports.boardView.markSelection(spotToTake.row, spotToTake.column, !exports.humanIsX);
@@ -405,8 +404,8 @@ exports.kickOffCountdownToNewGame = function kickOffCountdownToNewGame(){
   }, 4500)
 }
 
-function checkForCatsGame(){
-  return numberOfTurns === 9;
+exports.checkForCatsGame = function checkForCatsGame(){
+  return exports.numberOfTurns === 9;
 }
 
 
