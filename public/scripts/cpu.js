@@ -1,187 +1,137 @@
-exports.determineSelection = function(board, pieceValues, numberOfTurns){
-  var spot = {}
+var scoreTheBoard = require('./evaluator').determineBoardScore;
+var helpers = require('./helpers');
+var isRowTicTacToe = helpers.isRowTicTacToe;
+var isColumnTicTacToe = helpers.isColumnTicTacToe;
+var pieceWinValues;
+var pieceIdentifier;
 
-  if (numberOfTurns === 1 || numberOfTurns === 3){
-    spot = selectSpotInSpecialSecondOrFourthMoveSituations(board, pieceValues, numberOfTurns);
-  }
+exports.determineSelection = function(board, numberOfMoves, pieceMap){
+  pieceIdentifier = pieceMap;
+  pieceWinValues = createPieceWinValuesObj(pieceIdentifier);
+  var aWinningPlayIsPossible = numberOfMoves >= 4;
+  var chosenMoveDetails;
 
-  if(spot.row !== undefined)
-    return spot;
+  board.selectionMade(pieceIdentifier.cpu, chosenMoveDetails.row, chosenMoveDetails.column);
+  
+  if(aWinningPlayIsPossible)
+    chosenMoveDetails.winType = getWinTypeIfCpuHasWon(board);
 
-  if (numberOfTurns >= 3){
-    spot = selectWinningSpotIfPossibleOrBlockingSpotIfNecessary(pieceValues, board);
-  }
-
-  if(spot.row !== undefined)
-    return spot;
-
-  return selectFirstAvailableSpot(pieceValues, board);
+  return chosenMoveDetails;
 }
 
-function selectSpotInSpecialSecondOrFourthMoveSituations(board, pieceValues, numberOfTurns){
-  var spot = {};
+function tryEachMoveToDetermineBest(board, numberOfMoves){
+  var gameBoard = board.spots;
 
-  var isSecondMoveAndCenterIsOpen = numberOfTurns === 1 && board[1][1] === pieceValues.empty;
-  var isFourthMoveAndHumanHasOpposingCorners = numberOfTurns === 3 
-    && (
-        (board[0][0] === pieceValues.human && board[2][2] === pieceValues.human)
-        || (board[0][2] === pieceValues.human && board[2][0] === pieceValues.human)
-       );
+  var bestMoveExpectedValue = -200;
+  var bestMoveDetails = {};
 
-  if (isSecondMoveAndCenterIsOpen){
-    spot.row = 1;
-    spot.column = 1;
-  }else if (isFourthMoveAndHumanHasOpposingCorners){
-    spot.row = 0;
-    spot.column = 1;
-  }
+  for (var row = 0; row < board.dimensions; row++){
+    for (var column = 0; column < board.dimensions; column++){
+      var spotIsEmpty = gameBoard[row][column] === pieceIdentifier.empty;
 
-  return spot;
-}
+      if (spotIsEmpty){
+        board.selectionMade(pieceIdentifier.cpu, row, column);
 
-function selectWinningSpotIfPossibleOrBlockingSpotIfNecessary(pieceValues, board){
-  var spot = {}
+        var currentMoveExpectedValue = minimax(board, numberOfMoves + 1);
+ 
+        board.unmarkSelection(row, column);
 
-  var lineSumIndicatingPotentialWin = pieceValues.cpu + pieceValues.cpu + pieceValues.empty;
-  var lineSumIndicatingPotentialLoss = pieceValues.human + pieceValues.human + pieceValues.empty;
-  var sumsOfInterest = [lineSumIndicatingPotentialWin, lineSumIndicatingPotentialLoss];
-
-  var lookingForBlock = false; //first time through will be looking for a win, need to unset winType on spot obj when looking for block
-
-  for(var i = 0; i < 2; i++){
-    var matchedLine = checkLinesForDesiredSum(sumsOfInterest[i], board);
-
-    if (matchedLine){
-      spot = determineProperSpotToBlockOrWin(matchedLine, pieceValues, board);
-      if (lookingForBlock){
-        spot.winType = undefined;
+        if (currentMoveExpectedValue > bestMoveExpectedValue){
+          bestMoveDetails.row = row;
+          bestMoveDetails.column = column;
+          bestMoveExpectedValue = currentMoveExpectedValue;
+        }
       }
+    }
+  }
 
-      return spot;
+  return bestMoveDetails;
+}
+
+function createPieceWinValuesObj(pieceIdentifier){
+  var pieceWinValues = {}
+  pieceWinValues[pieceIdentifier.human] = -1;
+  pieceWinValues[pieceIdentifier.cpu] = 1;
+
+  return pieceWinValues;
+}
+
+function minimax(board, numberOfMoves, isCpusTurn){
+  var gameBoard = board.spots;
+  var score = scoreTheBoard(board, pieceWinValues);
+
+  var playerWon = score === pieceWinValues[pieceIdentifier.human];
+  var cpuWon = score === pieceWinValues[pieceIdentifier.cpu];
+  var catsGame = numberOfMoves === Math.pow(board.dimensions, 2);
+
+  if(playerWon || cpuWon || catsGame)
+    return score;
+  
+  if(isCpusTurn){
+    var bestScoreFound = -200;
+    
+    for (var row = 0; row < board.dimensions; row++){
+      for (var column = 0; column < board.dimensions; column++){
+        var spotIsEmpty = gameBoard[row][column] === pieceIdentifier.empty;
+
+        if (spotIsEmpty){
+          board.selectionMade(pieceIdentifier.cpu, row, column);
+          
+          bestScoreFound = Math.max(bestScoreFound, minimax(board, numberOfMoves + 1));
+
+          board.unmarkSelection(row, column);
+        }
+      }
+    }
+    return bestScoreFound;
+
+  }else{
+    var bestScoreFound = 200;
+
+    for (var row = 0; row < board.dimensions; row++){
+      for (var column = 0; column < board.dimensions; column++){
+        var spotIsEmpty = gameBoard[row][column] === pieceIdentifier.empty;
+
+        if (spotIsEmpty){
+          board.selectionMade(pieceIdentifier.human, row, column);
+ 
+          bestScoreFound = Math.min(bestScoreFound, minimax(board, numberOfMoves + 1, true));
+
+          board.unmarkSelection(row, column);
+        }
+      }
+    }
+    return bestScoreFound;
+  }
+}
+
+function getWinTypeIfCpuHasWon(board){
+  var gameBoard = board.spots;
+
+  var leftToRightDiagonalSet = new Set();
+  var rightToLeftDiagonalSet = new Set();
+
+
+  for(var i=0; i < board.dimensions; i++){
+    var rowIsTicTacToe = isRowTicTacToe(gameBoard[i]);
+    var columnIsTicTacToe = isColumnTicTacToe(gameBoard, i);
+
+    if(rowIsTicTacToe){
+      return 'horizontal';
+    }else if(columnIsTicTacToe){
+      return 'vertical';
     }
 
-    lookingForBlock = true;
-  }
-  return spot;
-  /*
-  OLD, pre-abstracted way of achieving the same thing as above.
-  I hate committing commented code but I left it in here for ease of comparison if desired.
-
-
-  var winningInfo = checkLinesForDesiredSum(pieceValues.cpu + pieceValues.cpu + pieceValues.empty, board);
-
-  if(winningInfo){
-    var spot = determineProperSpotToBlockOrWin(winningInfo, pieceValues, board);
-    spot.winType = winningInfo.winType;
-    return spot;
+    leftToRightDiagonalSet.add(gameBoard[i][i]);
+    rightToLeftDiagonalSet.add(gameBoard[i][board.dimensions - i - 1])
   }
 
-  // now block if they can win
-  var blockingInfo = checkLinesForDesiredSum(pieceValues.human + pieceValues.human + pieceValues.empty, board);
+  var winnerExistsOnLeftToRightDiagonal = leftToRightDiagonalSet.size === 1 && !leftToRightDiagonalSet.has('');
+  var winnerExistsOnRightToLeftDiagonal = rightToLeftDiagonalSet.size === 1 && !rightToLeftDiagonalSet.has('');
 
-  if(blockingInfo){
-    return determineProperSpotToBlockOrWin(blockingInfo, pieceValues, board);
+  if(winnerExistsOnLeftToRightDiagonal){
+    return 'top-left-bottom-right';
+  }else if(winnerExistsOnRightToLeftDiagonal){
+    return 'top-right-bottom-left'; 
   }
-  */
-}
-
-function selectFirstAvailableSpot(pieceValues, board){
-  var spot = {};
-
-  for(var i = 0; i < 3; i++){
-    if (board[i][0] === pieceValues.empty){
-      spot.row = i;
-      spot.column = 0;
-    }else if(board[i][1] === pieceValues.empty){
-      spot.row = i;
-      spot.column = 1;
-    }else if(board[i][2] === pieceValues.empty){
-      spot.row = i;
-      spot.column = 2;
-    }
-
-    if(spot.row !== undefined)
-      return spot;
-  }
-}
-
-
-function checkLinesForDesiredSum(sum, board){
-  for(var i = 0; i < 3; i++){
-    var horizontalSum = board[i].reduce(function(sum, element){ return sum + element }, 0);
-
-    if(horizontalSum === sum)
-      return {winType: 'horizontal', row: i}
-
-    var verticalSum = board[0][i] + board[1][i] + board[2][i];
-
-    if(verticalSum === sum)
-      return {winType: 'vertical', column: i}
-  }
-
-  var topLeftToBottomRightSum = board[0][0] + board[1][1] + board[2][2];
-
-  if(topLeftToBottomRightSum === sum)
-    return {winType: 'top-left-bottom-right'}
-
-  var topRightToBottomLeftSum = board[0][2] + board[1][1] + board[2][0];
-
-  if(topRightToBottomLeftSum === sum)
-    return {winType: 'top-right-bottom-left'}
-}
-
-function determineProperSpotToBlockOrWin(relevantLineInfo, pieceValues, board){
-  switch(relevantLineInfo.winType){
-    case 'horizontal':
-
-      if (board[relevantLineInfo.row][0] === pieceValues.empty){
-        relevantLineInfo.column = 0;
-      }else if(board[relevantLineInfo.row][1] === pieceValues.empty){
-        relevantLineInfo.column = 1;
-      }else{
-        relevantLineInfo.column = 2;
-      }
-
-      break;
-    case 'vertical':
-
-      if (board[0][relevantLineInfo.column] === pieceValues.empty){
-        relevantLineInfo.row = 0;
-      }else if(board[1][relevantLineInfo.column] === pieceValues.empty){
-        relevantLineInfo.row = 1;
-      }else{
-        relevantLineInfo.row = 2;
-      }
-
-      break;
-    case 'top-left-bottom-right':
-
-      if (board[0][0] === pieceValues.empty){
-        relevantLineInfo.row = 0;
-        relevantLineInfo.column = 0;
-      }else if(board[1][1] === pieceValues.empty){
-        relevantLineInfo.row = 1;
-        relevantLineInfo.column = 1;
-      }else{
-        relevantLineInfo.row = 2;
-        relevantLineInfo.column = 2;
-      }
-
-      break;
-    case 'top-right-bottom-left':
-
-      if (board[0][2] === pieceValues.empty){
-        relevantLineInfo.row = 0;
-        relevantLineInfo.column = 2;
-      }else if(board[1][1] === pieceValues.empty){
-        relevantLineInfo.row = 1;
-        relevantLineInfo.column = 1;
-      }else{
-        relevantLineInfo.row = 2;
-        relevantLineInfo.column = 0;
-      }
-
-      break;
-  }
-  return relevantLineInfo;
 }

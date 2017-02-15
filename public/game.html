@@ -5,29 +5,70 @@
     <script src="bundle.js"></script>
 </head>
 <body>
-    <div id="board">
-        <svg width="450" height="450" viewBox="0 0 450 450" xmlns="http://www.w3.org/2000/svg">
+    <div id="game-size-selector">
+        <h1>
+            Please select board size:
+        </h1>
+        <input type="button" id="3by3-button" value="3 by 3">
+        <input type="button" id="4by4-button" value="4 by 4">        
+    </div>
+    <div>
+        <svg width="490" height="490" viewBox="0 0 450 450" xmlns="http://www.w3.org/2000/svg">
             <line stroke="red"  />
             <path d="M357,359 C35,308 56,91 295,60" stroke="red" stroke-width="4" fill="transparent"/>
         </svg>
-        <table>
-          <tr id="row0">
+        <table style="display: none" id="3by3board" class="board">
+          <tr>
             <td data-row=0 data-column=0 class="open"></td>
-            <td data-row=0 data-column=1 class="open"></td>
-            <td data-row=0 data-column=2 class="open"></td>
+            <td data-row=0 data-column=1 class="open left-border"></td>
+            <td data-row=0 data-column=2 class="open left-border"></td>
           </tr>
-          <tr id="row1">
+          <tr class="top-border">
             <td data-row=1 data-column=0 class="open"></td>
-            <td data-row=1 data-column=1 class="open"></td>
-            <td data-row=1 data-column=2 class="open"></td>
+            <td data-row=1 data-column=1 class="open left-border"></td>
+            <td data-row=1 data-column=2 class="open left-border"></td>
           </tr>
-          <tr id="row2">
+          <tr class="top-border">
             <td data-row=2 data-column=0 class="open"></td>
-            <td data-row=2 data-column=1 class="open"></td>
-            <td data-row=2 data-column=2 class="open"></td>
+            <td data-row=2 data-column=1 class="open left-border"></td>
+            <td data-row=2 data-column=2 class="open left-border"></td>
           </tr>
         </table>
     </div>
+    <div>
+        <svg width="600" height="600" viewBox="0 0 600 600" xmlns="http://www.w3.org/2000/svg">
+            <line stroke="red"  />
+            <path d="M476,479 C47,411 75,121 393,80" stroke="red" stroke-width="4" fill="transparent"/>
+        </svg>
+        <table style="display: none" id="4by4board" class="board">
+          <tr>
+            <td data-row=0 data-column=0 class="open"></td>
+            <td data-row=0 data-column=1 class="open left-border"></td>
+            <td data-row=0 data-column=2 class="open left-border"></td>
+            <td data-row=0 data-column=3 class="open left-border"></td>
+          </tr>
+          <tr class="top-border">
+            <td data-row=1 data-column=0 class="open"></td>
+            <td data-row=1 data-column=1 class="open left-border"></td>
+            <td data-row=1 data-column=2 class="open left-border"></td>
+            <td data-row=1 data-column=3 class="open left-border"></td>
+          </tr>
+          <tr class="top-border">
+            <td data-row=2 data-column=0 class="open"></td>
+            <td data-row=2 data-column=1 class="open left-border"></td>
+            <td data-row=2 data-column=2 class="open left-border"></td>
+            <td data-row=2 data-column=3 class="open left-border"></td>
+          </tr>
+          <tr class="top-border">
+            <td data-row=3 data-column=0 class="open"></td>
+            <td data-row=3 data-column=1 class="open left-border"></td>
+            <td data-row=3 data-column=2 class="open left-border"></td>
+            <td data-row=3 data-column=3 class="open left-border"></td>
+          </tr>
+        </table>
+    </div>
+
+
     <div id="information">
         <h1 id="status">
             It is your turn.

@@ -20,22 +20,40 @@ line, path {
     stroke-width: 4;
 }
 
-path#cats-drawtime{
+path#cats-drawtime3{
     display: inline;
-    stroke-dasharray: 559;
-    stroke-dashoffset: 559;
+    stroke-dasharray: 599;
+    stroke-dashoffset: 599;
 }
 
-line#diagonal-drawtime {
+line#diagonal-drawtime3 {
     display: inline;
-    stroke-dasharray: 640;
-    stroke-dashoffset: 640;
+    stroke-dasharray: 685;
+    stroke-dashoffset: 685;
 }
 
-line#horizontal-or-vertical-drawtime {
+line#horizontal-or-vertical-drawtime3{
     display: inline;
-    stroke-dasharray: 454;
-    stroke-dashoffset: 454;   
+    stroke-dasharray: 484;
+    stroke-dashoffset: 484;   
+}
+
+path#cats-drawtime4{
+    display: inline;
+    stroke-dasharray: 746;
+    stroke-dashoffset: 746;
+}
+
+line#diagonal-drawtime4 {
+    display: inline;
+    stroke-dasharray: 853;
+    stroke-dashoffset: 853;
+}
+
+line#horizontal-or-vertical-drawtime4 {
+    display: inline;
+    stroke-dasharray: 605;
+    stroke-dashoffset: 605;   
 }
 
 @keyframes draw{
@@ -44,17 +62,15 @@ line#horizontal-or-vertical-drawtime {
   }
 }
 
-td:nth-child(2) {
+.left-border {
     border-left:2px solid black;
-    border-right:2px solid black;
 }
 
-#row1 td{
+.top-border td{
     border-top:2px solid black;
-    border-bottom:2px solid black;
 }
 
-#board{
+.board{
     margin: 30px 50px 0 30px;
 }
 
