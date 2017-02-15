@@ -1,5 +1,9 @@
 var specHelper = require('./spec-helper');
-var board = require('./../../public/scripts/board');
+var Board = require('./../../public/scripts/board');
+
+var emptyValue = 0;
+var boardDimensions = 3;
+var board = new Board(boardDimensions, emptyValue);
 
 
 exports.runSpecs = function(){
@@ -14,10 +18,10 @@ exports.runSpecs = function(){
       expect(Array.isArray(board.spots[randomNumber])).toBeTruthy(); 
     });
 
-    it('should reset 2d array to passed value with resetSpots', function(){
-      var emptyValue = 10;
+    it('should reset spots array with setSpotsToEmpty', function(){
+      board.spots = [[20, 20, 20], [20, 20, 20], [20, 20, 20]];
 
-      board.resetSpots(emptyValue);
+      board.setSpotsToEmpty();
 
       var randomNumber1 = specHelper.getRandomTicTacToeBoardSpotIndex();
       var randomNumber2 = specHelper.getRandomTicTacToeBoardSpotIndex();

@@ -11,6 +11,8 @@ exports.determineSelection = function(board, numberOfMoves, pieceMap){
   var aWinningPlayIsPossible = numberOfMoves >= 4;
   var chosenMoveDetails;
 
+  chosenMoveDetails = tryEachMoveToDetermineBest(board, numberOfMoves);
+
   board.selectionMade(pieceIdentifier.cpu, chosenMoveDetails.row, chosenMoveDetails.column);
   
   if(aWinningPlayIsPossible)

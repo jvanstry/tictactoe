@@ -165,14 +165,9 @@ exports.determineSelection = function(board, numberOfMoves, pieceMap){
   pieceIdentifier = pieceMap;
   pieceWinValues = createPieceWinValuesObj(pieceIdentifier);
   var aWinningPlayIsPossible = numberOfMoves >= 4;
-  var isWithinFirstCoupleOfMoves = !aWinningPlayIsPossible;
   var chosenMoveDetails;
 
-  if(isWithinFirstCoupleOfMoves && board.dimensions > 3){
-    chosenMoveDetails = alphaBetaPruneGameStart(board);
-  }else{
-    chosenMoveDetails = tryEachMoveToDetermineBest(board, numberOfMoves);    
-  }
+  chosenMoveDetails = tryEachMoveToDetermineBest(board, numberOfMoves);
 
   board.selectionMade(pieceIdentifier.cpu, chosenMoveDetails.row, chosenMoveDetails.column);
   
@@ -180,22 +175,6 @@ exports.determineSelection = function(board, numberOfMoves, pieceMap){
     chosenMoveDetails.winType = getWinTypeIfCpuHasWon(board);
 
   return chosenMoveDetails;
-}
-
-function alphaBetaPruneGameStart(board){
-  var gameBoard = board.spots;
-
-  if(gameBoard[1][2] === pieceIdentifier.empty){
-    return {row: 1, column: 2};
-  }else if(gameBoard[2][1] === pieceIdentifier.empty){
-    return {row: 2, column: 1}; 
-  }else if(gameBoard[1][1] === pieceIdentifier.empty){
-    return {row: 1, column: 1};
-  }else if(gameBoard[2][2] == pieceIdentifier.empty){
-    return {row: 2, column: 2}
-  }else{
-    return {row: 0, column: 0}
-  }
 }
 
 function tryEachMoveToDetermineBest(board, numberOfMoves){
@@ -396,6 +375,8 @@ exports.waitForBoardSizePreference = function waitForBoardSizePreference(){
       exports.boardDimensions = parseInt(selectedButtonText[0]);
 
       gameSelectorContainerDOM.style.display = 'none';
+      gameSelectorContainerDOM.removeEventListener('click', arguments.callee, false);
+
       exports.boardView.showBoardWithDimensions(exports.boardDimensions);
 
       exports.beginGame();
@@ -465,7 +446,7 @@ exports.prepareForAndHandleHumanSelection = function prepareForAndHandleHumanSel
 
   function markUserSelectionIfValid(e){
     var clickedSquare = e.target;
-    console.log(e.target)
+
     if(clickedSquare.classList.contains('open')){
       var selectedRow = parseInt(clickedSquare.dataset.row);
       var selectedCol = parseInt(clickedSquare.dataset.column);

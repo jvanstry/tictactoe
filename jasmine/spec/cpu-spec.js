@@ -1,23 +1,24 @@
 var specHelper = require('./spec-helper');
 var cpu = require('./../../public/scripts/cpu');
-var board = require('./../../public/scripts/board');
+var Board = require('./../../public/scripts/board');
+
 var pieceValues = {
-  empty: -10,
-  human: 0,
-  cpu: 1
+  empty: '',
+  human: 'x',
+  cpu: 'o'
 }
+
+var board = new Board(3, pieceValues.empty);
 
 exports.runSpecs = function(){
   beforeEach(function(){
-    board.spots = [[pieceValues.empty, pieceValues.empty, pieceValues.empty],
-                   [pieceValues.empty, pieceValues.empty, pieceValues.empty],
-                   [pieceValues.empty, pieceValues.empty, pieceValues.empty]];
-  })
+    board.setSpotsToEmpty();
+  });
 
   describe('The Cpu Brain', function(){
     it('should take corner spot on first move', function(){
       var numberOfPreviousTurns = 0;
-      var spotSelected = cpu.determineSelection(board.spots, pieceValues, numberOfPreviousTurns);
+      var spotSelected = cpu.determineSelection(board, numberOfPreviousTurns, pieceValues);
 
       expect(spotSelected.row).toEqual(0);
       expect(spotSelected.column).toEqual(0); 
@@ -29,7 +30,7 @@ exports.runSpecs = function(){
       var columnOfPreviousSelection = 0;
 
       board.selectionMade(pieceValues.human, rowOfPreviousSelection, columnOfPreviousSelection);
-      var spotSelected = cpu.determineSelection(board.spots, pieceValues, numberOfPreviousTurns);
+      var spotSelected = cpu.determineSelection(board, numberOfPreviousTurns, pieceValues);
 
       expect(spotSelected.row).toEqual(1);
       expect(spotSelected.column).toEqual(1);
@@ -41,7 +42,7 @@ exports.runSpecs = function(){
       var columnOfPreviousSelection = 1;
 
       board.selectionMade(pieceValues.human, rowOfPreviousSelection, columnOfPreviousSelection);
-      var spotSelected = cpu.determineSelection(board.spots, pieceValues, numberOfPreviousTurns);
+      var spotSelected = cpu.determineSelection(board, numberOfPreviousTurns, pieceValues);
 
       expect(spotSelected.row).toEqual(0);
       expect(spotSelected.column).toEqual(0);      
@@ -55,13 +56,13 @@ exports.runSpecs = function(){
                      [pieceValues.empty, pieceValues.empty, pieceValues.human]]
 
 
-      var spotSelected = cpu.determineSelection(board.spots, pieceValues, numberOfPreviousTurns);
+      var spotSelected = cpu.determineSelection(board, numberOfPreviousTurns, pieceValues);
 
       expect(spotSelected.row).toEqual(0);
       expect(spotSelected.column).toEqual(1);  
     });
 
-    it('should play winning move if available', function(){
+    it('should win or make assured winning move if available', function(){
       var numberOfPreviousTurns = 4;
 
       board.spots = [[pieceValues.cpu, pieceValues.human, pieceValues.human], 
@@ -69,13 +70,15 @@ exports.runSpecs = function(){
                      [pieceValues.empty, pieceValues.empty, pieceValues.empty]]
 
 
-      var spotSelected = cpu.determineSelection(board.spots, pieceValues, numberOfPreviousTurns);
+      var spotSelected = cpu.determineSelection(board, numberOfPreviousTurns, pieceValues);
 
-      expect(spotSelected.row).toEqual(2);
-      expect(spotSelected.column).toEqual(2);  
+      var selectedSpotIsGuaranteedWin = spotSelected.row === 1 && spotSelected.column === 0 
+        || spotSelected.row === 2 && spotSelected.column === 2;
+
+      expect(selectedSpotIsGuaranteedWin).toBeTruthy(); 
     });
 
-    it('should play winning move if both block and win are available', function(){
+    it('should win or block with assured win if both pieces have 2 in a row', function(){
       var numberOfPreviousTurns = 4;
 
       board.spots = [[pieceValues.human, pieceValues.cpu, pieceValues.empty], 
@@ -83,10 +86,12 @@ exports.runSpecs = function(){
                      [pieceValues.empty, pieceValues.empty, pieceValues.empty]]
 
 
-      var spotSelected = cpu.determineSelection(board.spots, pieceValues, numberOfPreviousTurns);
+      var spotSelected = cpu.determineSelection(board, numberOfPreviousTurns, pieceValues);
 
-      expect(spotSelected.row).toEqual(2);
-      expect(spotSelected.column).toEqual(1);  
+      var selectedSpotIsGuaranteedWin = spotSelected.row === 2 && spotSelected.column === 0 
+        || spotSelected.row === 2 && spotSelected.column === 1;
+
+      expect(selectedSpotIsGuaranteedWin).toBeTruthy(); 
     });
 
     it('should play blocking move if needed and no win available', function(){
@@ -97,7 +102,7 @@ exports.runSpecs = function(){
                      [pieceValues.empty, pieceValues.empty, pieceValues.empty]]
 
 
-      var spotSelected = cpu.determineSelection(board.spots, pieceValues, numberOfPreviousTurns);
+      var spotSelected = cpu.determineSelection(board, numberOfPreviousTurns, pieceValues);
 
       expect(spotSelected.row).toEqual(2);
       expect(spotSelected.column).toEqual(2);  

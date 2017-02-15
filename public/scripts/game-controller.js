@@ -27,6 +27,8 @@ exports.waitForBoardSizePreference = function waitForBoardSizePreference(){
       exports.boardDimensions = parseInt(selectedButtonText[0]);
 
       gameSelectorContainerDOM.style.display = 'none';
+      gameSelectorContainerDOM.removeEventListener('click', arguments.callee, false);
+
       exports.boardView.showBoardWithDimensions(exports.boardDimensions);
 
       exports.beginGame();
@@ -96,7 +98,7 @@ exports.prepareForAndHandleHumanSelection = function prepareForAndHandleHumanSel
 
   function markUserSelectionIfValid(e){
     var clickedSquare = e.target;
-    console.log(e.target)
+
     if(clickedSquare.classList.contains('open')){
       var selectedRow = parseInt(clickedSquare.dataset.row);
       var selectedCol = parseInt(clickedSquare.dataset.column);

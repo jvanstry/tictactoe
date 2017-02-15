@@ -1,6 +1,5 @@
 var specHelper = require('./spec-helper');
 var gameController = require('./../../public/scripts/game-controller');
-var boardView = require('./../../public/scripts/board-view');
 
 exports.runSpecs = function(){
   describe('The Game Controller', function(){
@@ -9,6 +8,14 @@ exports.runSpecs = function(){
       spyOn(gameController.infoView, 'updateStatusText');
       spyOn(gameController.boardView, 'reset');
       spyOn(gameController.boardView, 'markWinner');
+
+      gameController.waitForBoardSizePreference();
+      specHelper.simulateClickOnId("3by3-button");
+    });
+
+    afterEach(function(){
+      document.getElementById('game-size-selector').style.display = 'inline-block';
+
     });
 
     describe('beginGame', function(){
@@ -18,21 +25,23 @@ exports.runSpecs = function(){
       });
 
       it('should setup click handler on board for human input on first run through', function(){
-        spyOn(gameController, 'prepareForReceiveAndHandleHumanSelection').and.callThrough();
+        spyOn(gameController, 'prepareForAndHandleHumanSelection').and.callThrough();
+        gameController.firstGameOfSession = true;
 
         gameController.beginGame();
 
-        expect(gameController.prepareForReceiveAndHandleHumanSelection).toHaveBeenCalled();
+        expect(gameController.prepareForAndHandleHumanSelection).toHaveBeenCalled();
         expect(gameController.boardView.addClickHandlerToBoardElement).toHaveBeenCalled();
       });
 
       it('should not setup click handler directly on second calling', function(){
+        spyOn(gameController, 'prepareForAndHandleHumanSelection').and.callThrough();
         gameController.firstGameOfSession = false;
-        spyOn(gameController, 'prepareForReceiveAndHandleHumanSelection').and.callThrough();
+        gameController.humanIsX = true;
 
         gameController.beginGame();
 
-        expect(gameController.prepareForReceiveAndHandleHumanSelection).not.toHaveBeenCalled();
+        expect(gameController.prepareForAndHandleHumanSelection).not.toHaveBeenCalled();
         expect(gameController.boardView.addClickHandlerToBoardElement).not.toHaveBeenCalled();
       });
 
@@ -47,11 +56,11 @@ exports.runSpecs = function(){
       });
 
       it('should reset the board object everytime', function(){
-        spyOn(gameController.board, 'resetSpots');
+        spyOn(gameController.board.__proto__, 'setSpotsToEmpty');
 
         gameController.beginGame();
 
-        expect(gameController.board.resetSpots).toHaveBeenCalled();
+        expect(gameController.board.__proto__.setSpotsToEmpty).toHaveBeenCalled();
       });
 
       it('should reset the board on all times after first', function(){
@@ -101,18 +110,18 @@ exports.runSpecs = function(){
       it('should call computer before human turn, and not call human if computer wins', function(){
         spyOn(gameController, 'getAndMarkCpuSelection').and.returnValue({winType: true});
         spyOn(gameController, 'kickOffCountdownToNewGame');
-        spyOn(gameController, 'prepareForReceiveAndHandleHumanSelection');
+        spyOn(gameController, 'prepareForAndHandleHumanSelection');
 
         gameController.runATurnForEachPlayer();
 
         expect(gameController.getAndMarkCpuSelection).toHaveBeenCalled();
-        expect(gameController.prepareForReceiveAndHandleHumanSelection).not.toHaveBeenCalled();        
+        expect(gameController.prepareForAndHandleHumanSelection).not.toHaveBeenCalled();        
       });
 
       it('should call appropriate functions upon computer winning', function(){
         spyOn(gameController, 'getAndMarkCpuSelection').and.returnValue({winType: true});
         spyOn(gameController, 'kickOffCountdownToNewGame');
-        spyOn(gameController, 'prepareForReceiveAndHandleHumanSelection');
+        spyOn(gameController, 'prepareForAndHandleHumanSelection');
 
         gameController.runATurnForEachPlayer();
 
@@ -123,7 +132,7 @@ exports.runSpecs = function(){
 
       it('should iterate the numberOfTurns after computer\'s move', function(){
         spyOn(gameController, 'getAndMarkCpuSelection').and.returnValue({winType: false});
-        spyOn(gameController, 'prepareForReceiveAndHandleHumanSelection');
+        spyOn(gameController, 'prepareForAndHandleHumanSelection');
 
         gameController.numberOfTurns = 2;
 
@@ -134,7 +143,7 @@ exports.runSpecs = function(){
 
       it('should call checkForCatsGame twice if computer has not won', function(){
         spyOn(gameController, 'getAndMarkCpuSelection').and.returnValue({winType: false});
-        spyOn(gameController, 'prepareForReceiveAndHandleHumanSelection');
+        spyOn(gameController, 'prepareForAndHandleHumanSelection');
         spyOn(gameController, 'checkForCatsGame');
 
         gameController.runATurnForEachPlayer();
@@ -143,7 +152,7 @@ exports.runSpecs = function(){
       })
     });
     
-    describe('prepareForReceiveAndHandleHumanSelection', function(){
+    describe('prepareForAndHandleHumanSelection', function(){
       beforeEach(function(){
         spyOn(gameController.boardView, 'markSelection');
         spyOn(gameController.board, 'selectionMade');
@@ -152,7 +161,7 @@ exports.runSpecs = function(){
       it("should not do anything if a taken square is chosen", function(){
         gameController.BOARD_DOM_ID = 'taken-click-test';
 
-        gameController.prepareForReceiveAndHandleHumanSelection(function(){});
+        gameController.prepareForAndHandleHumanSelection(function(){});
 
         specHelper.simulateClickOnId('taken-click-test');
         
@@ -162,7 +171,7 @@ exports.runSpecs = function(){
       it("should mark the selection if square is open", function(){
         gameController.BOARD_DOM_ID = 'open-click-test';
 
-        gameController.prepareForReceiveAndHandleHumanSelection(function(){});
+        gameController.prepareForAndHandleHumanSelection(function(){});
 
         specHelper.simulateClickOnId('open-click-test');
         
