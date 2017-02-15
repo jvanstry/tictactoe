@@ -13,11 +13,6 @@ exports.runSpecs = function(){
       specHelper.simulateClickOnId("3by3-button");
     });
 
-    afterEach(function(){
-      document.getElementById('game-size-selector').style.display = 'inline-block';
-
-    });
-
     describe('beginGame', function(){
       beforeEach(function(){
         spyOn(gameController, 'runATurnForEachPlayer');

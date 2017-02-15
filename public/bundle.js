@@ -377,6 +377,7 @@ exports.waitForBoardSizePreference = function waitForBoardSizePreference(){
       gameSelectorContainerDOM.style.display = 'none';
       gameSelectorContainerDOM.removeEventListener('click', arguments.callee, false);
 
+      document.getElementById('information').style.display = 'inline-block';
       exports.boardView.showBoardWithDimensions(exports.boardDimensions);
 
       exports.beginGame();

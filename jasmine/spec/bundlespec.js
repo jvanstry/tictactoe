@@ -170,11 +170,6 @@ exports.runSpecs = function(){
       specHelper.simulateClickOnId("3by3-button");
     });
 
-    afterEach(function(){
-      document.getElementById('game-size-selector').style.display = 'inline-block';
-
-    });
-
     describe('beginGame', function(){
       beforeEach(function(){
         spyOn(gameController, 'runATurnForEachPlayer');
@@ -1177,6 +1172,7 @@ exports.waitForBoardSizePreference = function waitForBoardSizePreference(){
       gameSelectorContainerDOM.style.display = 'none';
       gameSelectorContainerDOM.removeEventListener('click', arguments.callee, false);
 
+      document.getElementById('information').style.display = 'inline-block';
       exports.boardView.showBoardWithDimensions(exports.boardDimensions);
 
       exports.beginGame();
