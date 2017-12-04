@@ -7,4 +7,4 @@ Who doesn't just love to play Tic Tac Toe?? Test your mettle at https://frozen-l
 3. `gulp` to start server
 
 ## run tests
-go to base url + /test ... if viewing on the deployed site this url would be https://frozen-lake-47583.herokuapp.com/test
+go to base url + /test ... if viewing on the deployed site this url would be https://morning-citadel-28700.herokuapp.com/
